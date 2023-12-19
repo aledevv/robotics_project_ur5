@@ -114,11 +114,6 @@ def extractAnnotations(json_file_path, img_id, annotation_id):
         
     return annotation_id
     
-    
-def writeInJSONFile(jsonToWrite):
-    with open('_annotations.coco.json') as ann:
-        ann.write(jsonToWrite)
-    
 
 
 
@@ -231,18 +226,16 @@ def main():
                             
                             img_id+=1
     
-                               
-    #file = open('out.txt', 'w')
-    #file.write(str(annotations_list_dict))
-    
     
     # TODO completa da _json
     _json["images"]=images_list_dict
     _json["annotations"]=annotations_list_dict
     
-    file = open('_annotations.coco.json', 'w')
-    file.write(str(_json))                      
     
+    # Writing the disctionary into a JSON file                     
+    with open('_annotations.coco.json', 'w') as outfile:
+ 
+        json.dump(_json, outfile)
     
     
     
