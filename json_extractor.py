@@ -10,6 +10,88 @@ import cv2
 images_list_dict = []           # dictionary containing all the images of the dataset
 annotations_list_dict = []      # dictionary containing all the annotations of the object inside the images
 
+_json = {
+    "info": {
+        "year": "2023",
+        "version": "1",
+        "description": "Created with a script",
+        "contributor": "",
+        "url": "",
+        "date_created": ""
+    },
+    "licenses": [
+        {
+            "id": 1,
+            "url": "https://creativecommons.org/licenses/by/4.0/",
+            "name": "CC BY 4.0"
+        }
+    ],
+    "categories": [
+        {
+            "id": 0,
+            "name": "blocks",
+            "supercategory": "none"
+        },
+        {
+            "id": 1,
+            "name": "X1-Y1-Z2",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 2,
+            "name": "X1-Y2-Z1",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 3,
+            "name": "X1-Y2-Z2",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 4,
+            "name": "X1-Y2-Z2-CHAMFER",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 5,
+            "name": "X1-Y2-Z2-TWINFILLET",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 6,
+            "name": "X1-Y3-Z2",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 7,
+            "name": "X1-Y3-Z2-FILLET",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 8,
+            "name": "X1-Y4-Z1",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 9,
+            "name": "X1-Y4-Z2",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 10,
+            "name": "X2-Y2-Z2",
+            "supercategory": "blocks"
+        },
+        {
+            "id": 11,
+            "name": "X2-Y2-Z2-FILLET",
+            "supercategory": "blocks"
+        }
+    ],
+    'images': [],
+    'annotations': []
+}
+
 ###################################
 #           FUNCTIONS             #
 ###################################
@@ -79,10 +161,10 @@ def addToImagesDict(dictToAdd): # Use dictionaries that are as json
 
 
 
-def newAnnotation(id, image_id, category_id, bbox):
+def newAnnotation(id, image_id, label, bbox):
     ann_dict = {'id': id,
                 'image_id': image_id,
-                'category_id': category_id,
+                'category_id': getCategoryId(label),
                 'bbox': bbox,
                 'area': bbox[2]*bbox[3], # Area = width * height -> they are respectively at 3rd and 4th index of the bbox
                 'segmentation': [],
@@ -94,7 +176,10 @@ def addToAnnotations(annToAdd): # Use dictionaries that are as json
     annotations_list_dict.append(annToAdd)
    
    
-   
+def getCategoryId(label):
+    for i in range(0, len(_json["categories"])):
+        if _json["categories"][i]["name"] == label:
+            return _json["categories"][i]["id"]
    
    
    
@@ -113,10 +198,6 @@ def main():
                 'X1-Y3-Z2' 'X1-Y3-Z2-FILLET' 'X1-Y4-Z1' 'X1-Y4-Z2' 'X2-Y2-Z2'
                 'X2-Y2-Z2-FILLET']
     # TODO RICORDATI DI VERIFICARE CHE L'INDICE MESSO SIA GIUSTO (MAGARI QUI PARTE DA 0)
-    
-    
-    annotations_json = {'images': [],
-                       'annotations':[]}
     
     
     
@@ -150,14 +231,21 @@ def main():
                             
                             img_id+=1
     
-    #print(annotations_list_dict)                            
+                               
     #file = open('out.txt', 'w')
     #file.write(str(annotations_list_dict))
     
-    annotations_json['images']=images_list_dict
-    annotations_json['annotations']=annotations_list_dict
     
-    writeInJSONFile(annotations_json)                       
+    # TODO completa da _json
+    _json["images"]=images_list_dict
+    _json["annotations"]=annotations_list_dict
+    
+    file = open('_annotations.coco.json', 'w')
+    file.write(str(_json))                      
+    
+    
+    
+    
     
 if __name__ == "__main__":
     main()
