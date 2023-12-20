@@ -126,11 +126,11 @@ def extractAnnotations(json_file_path, img_id, annotation_id):
 - date_captured: x
 '''
 
-def newImage(image_name, img_id, height, width):
+def newImage(img_id, height, width):
     
     img_dict = {'id': img_id,
                 'licence': 1,
-                'file_name': image_name,
+                'file_name': 'img_'+str(img_id)+'.jpeg',
                 'height': height,
                 'width': width,
                 'date_captured': 'x'}
@@ -196,7 +196,7 @@ def main():
     
     
     
-    # lets get all data
+    # let's get all data
     main_folder = 'assigns'
 
     #print(os.path.join(main_folder, 'assign1'))
@@ -220,7 +220,7 @@ def main():
                             height, width = opened_img.shape[:2]
                             
                             #add image to images section of the json
-                            #newImage(img_file, img_id, height, width)
+                            newImage(img_id, height, width)
                             
                             annotation_id=extractAnnotations(json_file, img_id, annotation_id)
                             
@@ -235,7 +235,7 @@ def main():
     # Writing the disctionary into a JSON file                     
     with open('_annotations.coco.json', 'w') as outfile:
  
-        json.dump(_json, outfile)
+        json.dump(_json, outfile, indent=7)
     
     
     
