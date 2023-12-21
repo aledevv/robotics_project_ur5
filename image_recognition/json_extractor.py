@@ -1,7 +1,10 @@
+# step 3 create a JSON file of annotations for each folder
+
 import json
 import os
 import numpy as np
 import cv2
+import string, random
 
 ###################################
 #          GLOBAL VARS            #
@@ -106,8 +109,21 @@ def extractAnnotations(json_file_path, img_id, annotation_id):
     for current_obj in data:
         # get label
         label = data[current_obj]['y']
-        #get bbox
+        # get bbox
         bbox = data[current_obj]['bbox']
+        
+        # FIXING BBOX
+        
+        # get 3d bbox pixels
+        
+        bbox3D = data[current_obj]['3d_bbox_pixel_space']
+        
+        # fixing width
+        bbox[2]=bbox[2]-bbox[0]
+        
+        #fixing height
+        bbox[3]=bbox3D[-1][1]-bbox[1]  # bottom left corner of the 3D bbox
+        
         #write the annotation
         newAnnotation(annotation_id, img_id, label, bbox)
         annotation_id+=1
@@ -126,11 +142,11 @@ def extractAnnotations(json_file_path, img_id, annotation_id):
 - date_captured: x
 '''
 
-def newImage(img_id, height, width):
+def newImage(img_id, image_name, height, width):
     
     img_dict = {'id': img_id,
                 'licence': 1,
-                'file_name': 'img_'+str(img_id)+'.jpeg',
+                'file_name': image_name,
                 'height': height,
                 'width': width,
                 'date_captured': 'x'}
@@ -157,6 +173,7 @@ def addToImagesDict(dictToAdd): # Use dictionaries that are as json
 
 
 def newAnnotation(id, image_id, label, bbox):
+    
     ann_dict = {'id': id,
                 'image_id': image_id,
                 'category_id': getCategoryId(label),
@@ -175,9 +192,12 @@ def getCategoryId(label):
     for i in range(0, len(_json["categories"])):
         if _json["categories"][i]["name"] == label:
             return _json["categories"][i]["id"]
+
    
-   
-   
+def delete_JSON_files(path):
+    for item in os.listdir(path):
+        if item.endswith('.json') and not item.startswith('_annotations'):
+            os.remove(path+'/'+item) 
    
 ''' #TO GET THE NAME OF THE CLASSES
 def writeClasses(data):
@@ -185,57 +205,66 @@ def writeClasses(data):
         classes.append(data[current_obj]['y'])
         #print(data[current_obj]['y'])'''
 
+def extractJSON(path):
+    img_id=0           #image id
+    annotation_id=0    #annotation id
+    
+    for file in os.listdir(path):
+        if file.endswith('.json'): # file = json_file
+            #image and json file have the same name, just setting the extension .jpeg to open the img afterwards
+            img_file = file[:len(file)-3]+'peg'
+            
+            #open the relative image
+            opened_img = cv2.imread(path+'/'+img_file,0)
+            height, width = opened_img.shape[:2]
+            
+            #add image to images section of the json
+            newImage(img_id, img_file, height, width)
+            
+            annotation_id=extractAnnotations(path+'/'+file, img_id, annotation_id)
+                    
+            img_id+=1
+    
+    
+    # completa da _json
+    _json["images"]=images_list_dict
+    _json["annotations"]=annotations_list_dict
+    
+    
+    # Writing the disctionary into a JSON file                     
+    with open(path+'/_annotations.coco.json', 'w') as outfile:
+ 
+        json.dump(_json, outfile, indent=7)
+    
+    # clear disctionaries for next iteration
+    images_list_dict.clear()
+    annotations_list_dict.clear()
+
+    print(f'Finito {path}')
 
 
 def main():
 
-    classes = [ 'X1-Y1-Z2' 'X1-Y2-Z1' 'X1-Y2-Z2' 'X1-Y2-Z2-CHAMFER' 'X1-Y2-Z2-TWINFILLET'
-                'X1-Y3-Z2' 'X1-Y3-Z2-FILLET' 'X1-Y4-Z1' 'X1-Y4-Z2' 'X2-Y2-Z2'
+    classes = [ 'X1-Y1-Z2', 'X1-Y2-Z1', 'X1-Y2-Z2', 'X1-Y2-Z2-CHAMFER', 'X1-Y2-Z2-TWINFILLET',
+                'X1-Y3-Z2', 'X1-Y3-Z2-FILLET', 'X1-Y4-Z1', 'X1-Y4-Z2', 'X2-Y2-Z2',
                 'X2-Y2-Z2-FILLET']
     # TODO RICORDATI DI VERIFICARE CHE L'INDICE MESSO SIA GIUSTO (MAGARI QUI PARTE DA 0)
     
     
     
     # let's get all data
-    main_folder = 'assigns'
+    main_folder = 'dataset/'
 
     #print(os.path.join(main_folder, 'assign1'))
 
-    img_id=0
-    annotation_id=0    #annotation id
-    for assign_folder in os.listdir(main_folder):
-        if not assign_folder.startswith('.'):
-            for scene in os.listdir(main_folder+'/'+assign_folder):
-                if not scene.startswith('.'):
-                    for file in os.listdir(main_folder+'/'+assign_folder+'/'+scene):
-                        if file.endswith('.json'):
+    for folder in os.listdir(main_folder): # train, valid, test
+        if not folder.startswith('.') and not folder.startswith('imgs') and os.path.isdir(main_folder+'/'+folder): # exclude folder starting with .
+            path = main_folder+'/'+folder
+            #for each one extract json
+            extractJSON(path)
+            
+            delete_JSON_files(path)
                             
-                            json_file = main_folder+'/'+assign_folder+'/'+scene+'/'+file
-                            
-                            #image and json file have the same name, just setting the extension .jpeg to open the img afterwards
-                            img_file = file[:len(file)-4]+'jpeg'
-                            
-                            #open the relative image
-                            opened_img = cv2.imread(main_folder+'/'+assign_folder+'/'+scene+'/'+img_file,0)
-                            height, width = opened_img.shape[:2]
-                            
-                            #add image to images section of the json
-                            newImage(img_id, height, width)
-                            
-                            annotation_id=extractAnnotations(json_file, img_id, annotation_id)
-                            
-                            img_id+=1
-    
-    
-    # TODO completa da _json
-    _json["images"]=images_list_dict
-    _json["annotations"]=annotations_list_dict
-    
-    
-    # Writing the disctionary into a JSON file                     
-    with open('_annotations.coco.json', 'w') as outfile:
- 
-        json.dump(_json, outfile, indent=7)
     
     
     
