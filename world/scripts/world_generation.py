@@ -13,7 +13,7 @@ WORLD_FILE = '../robotics_project_ur5/world.world'
 
 MIN_NUM_BLOCKS = 3
 
-LEGO_LABELS = ['X1-Y1-Z2',
+LEGO_LABELS = [ 'X1-Y1-Z2',
                 'X1-Y2-Z1',
                 'X1-Y2-Z2',
                 'X1-Y2-Z2-CHAMFER',
