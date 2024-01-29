@@ -51,6 +51,7 @@ class LegoBlock:
         self.x2 = x2
         self.y2 = y2
 
+
 def store_blocks(data):
 
     blocks = []
@@ -63,6 +64,7 @@ def store_blocks(data):
 
     return blocks
 
+
 def print_blocks_info(blocks):
 
     for block in blocks:
@@ -70,6 +72,8 @@ def print_blocks_info(blocks):
         print("\tconfidence: " + str(round(block.confidence, 3)))
         print("\tTop-left corner: (" + str(int(block.x1)) + ", " + str(int(block.y1)) + ")")
         print("\tBottom-right corner: (" + str(int(block.x2)) + ", " + str(int(block.y2)) + ")")
+
+
 
 def detection(img_path):
 
