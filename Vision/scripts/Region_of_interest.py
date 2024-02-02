@@ -10,8 +10,8 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.abspath(ROOT))
 
-INPUT_FILE = str(ROOT) + '/log/img_ZED_cam.png'
-OUTPUT_FILE = str(ROOT) + '/log/ROI_table.png'
+INPUT_FILE = str(ROOT) + '/images/img_ZED_cam.png'
+OUTPUT_FILE = str(ROOT) + '/images/ROI_table.png'
 
 # --------------------- FUNCTIONS  ---------------------
 

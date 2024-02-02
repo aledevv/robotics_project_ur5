@@ -7,7 +7,7 @@ import numpy as np
 import cv2 as cv
 from IPython.display import display
 from PIL import Image
-import region_of_interest as roi
+import Region_of_interest as roi
 from ultralytics import YOLO
 from ultralytics.utils.torch_utils import select_device
 import json
@@ -18,7 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.abspath(ROOT))
 
-IMG_PATH = str(ROOT) + '/log/ROI_table.png'
+IMG_PATH = str(ROOT) + '/images/ROI_table.png'
 
 # --------------------- CONSTANTS ---------------------
 WEIGHTS = str(ROOT) + "/weights/best.pt"
@@ -43,13 +43,24 @@ LEGO_LABELS =  ['X1-Y1-Z2',
 
 class LegoBlock:
 
-    def __init__(self, label, confidence, x1, y1, x2, y2):
+    def __init__(self, label, confidence, x1, y1, x2, y2, img_path):
         self.label = label
         self.confidence = confidence
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.img = Image.open(self.img)
+        self.block_center_pixels = (self.img.width- int((x1+x2) / 2), int((y1+y2) / 2))     # coordinates of the block in the image (useful to get point cloud)
+        self.point_cloud = ()
+        self.world_coordinates = ()
+
+    def info(self):
+        print("Block label: " + self.label)
+        print("\tconfidence: " + str(round(self.confidence, 3)))
+        print("\tTop-left corner: (" + str(int(self.x1)) + ", " + str(int(self.y1)) + ")")
+        print("\tBottom-right corner: (" + str(int(self.x2)) + ", " + str(int(self.y2)) + ")")
+        print("\tWorld coordinates: " + str(self.world_coordinates))
 
 
 def store_blocks(data):
@@ -68,10 +79,7 @@ def store_blocks(data):
 def print_blocks_info(blocks):
 
     for block in blocks:
-        print("Block label: " + block.label)
-        print("\tconfidence: " + str(round(block.confidence, 3)))
-        print("\tTop-left corner: (" + str(int(block.x1)) + ", " + str(int(block.y1)) + ")")
-        print("\tBottom-right corner: (" + str(int(block.x2)) + ", " + str(int(block.y2)) + ")")
+        block.info()
 
 
 
@@ -90,6 +98,8 @@ def detection(img_path):
 
     return blocks
 
+
+# TODO POSE Detection
 
 # CLI:      python detection.py /path/to/img.smth
 if __name__ == '__main__':
