@@ -12,9 +12,10 @@
     </p>   
 </p>
 
-
+## PROJECT DESCRIPTION
 The objective of the project is to use the manipulator able to do autonomus pick-and-place operations.
 Through the zed-camera, able to detect the classes and position of every block, the robot have to pick the object and place in the corrisponding potion.
+## FOLDER STRUCTURE
 
 ## INSTALLATION
 The project has been developed and tested on Ubuntu 20.04 with ROS Noetic, also we used the [locosim](https://github.com/mfocchi/locosim) repository for the ur5 simulation. The installation of the project is the following:
@@ -40,9 +41,14 @@ catkin_make install
 source install/setup.bash
 ```
 
+## HOW TO RUN THE PROJECT
+### SETUP
+Inside  ``~/ros_ws/src/locosim/robot_control/base_controllers//params.py`` go to the line 46 and set:
+```
+'gripper_sim': True,
+```
 
-impostazione gripper:
+### RUN
 
-~/ros_ws/src/locosim/robot_control/base_controllers//params.py
 
-line 46 -> 'gripper_sim': True,  
+
