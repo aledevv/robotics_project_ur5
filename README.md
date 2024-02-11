@@ -47,6 +47,10 @@ Inside  ``~/ros_ws/src/locosim/robot_control/base_controllers//params.py`` go to
 ```
 'gripper_sim': True,
 ```
+Go to  ``~/ros_ws/src/robotic_project``DA FINIRE
+```
+
+```
 
 ### RUN
 
