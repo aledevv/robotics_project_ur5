@@ -13,7 +13,7 @@ from ultralytics.utils.torch_utils import select_device
 import json
 
 # --------------------- DIRECTORIES and PATHS ---------------------
-ROOT = Path(__file__).resolve().parents[1] # Vision folder
+ROOT = Path(__file__).resolve().parents[1]  # vision folder
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.abspath(ROOT))
@@ -57,6 +57,7 @@ class LegoBlock:
         self.world_coord = ()
 
     def info(self):
+        # @Description Function that writes some info about the block
         print("\nBlock label: " + self.label)
         print("\tconfidence: " + str(round(self.confidence, 3)))
         print("\tTop-left corner: (" + str(int(self.x1)) + ", " + str(int(self.y1)) + ")")
@@ -66,7 +67,9 @@ class LegoBlock:
 
 
 def store_blocks(data):
-
+    # @Description takes blocks data from json object from YOLO detection to create a list of blocks
+    # @Parameters JSON/dictionary object
+    # @Returns a list of Blocks
     blocks = []
 
     for lego in data:
@@ -79,13 +82,17 @@ def store_blocks(data):
 
 
 def print_block_info(blocks):
+    # @Description prints list of blocks info
+    # @Parameters List of Block objects
 
     for block in blocks:
         block.info()
 
 
-
 def detection(img_path):
+    # @Description It crops the ZED-cam image into the Region of Interest (only the table), block detection with YOLO follows
+    # @Parameters path of the input image (from ZED camera)
+    # @Returns the list of detected Blocks
 
     roi.find_roi(img_path)
 
@@ -102,7 +109,7 @@ def detection(img_path):
 
 # TODO POSE Detection
 
-# CLI:      python detection.py /path/to/img.smth
+# CLI:  python detection.py /path/to/img.smth
 if __name__ == '__main__':
 
     if len(sys.argv) > 1:   # img has been passed via CLI
