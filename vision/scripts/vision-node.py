@@ -14,6 +14,8 @@ import Block_detection as Lego
 import Region_of_interest as roi
 import math
 from tf.transformations import quaternion_from_euler
+from robotics_project_ur5.srv import GetBrickPose, GetBrickPoseResponse
+from geometry_msgs.msg import Pose
 
 # --------------- DIRECTORIES ---------------
 ROOT = Path(__file__).resolve().parents[1]  # vision directory
@@ -253,7 +255,7 @@ def color_pixel(x, y, color):
     elif color == 'yellow':
         img[y][x] = np.array([0, 255, 255])
 
-    cv.imwrite(LINE_IMG, img);
+    cv.imwrite(LINE_IMG, img)
 
 
 def to_quaternions(r, p ,y):
@@ -264,41 +266,78 @@ def to_quaternions(r, p ,y):
     return quaternion_from_euler(r, p, y)
 
 
-def msg_pub(block_list):
+def msg_pub(request):
     # @Description function that prepares and sends a message to motion node
     # @Parameters list of detected blocks
 
-    global send_next_msg
+    #global send_next_msg
+    global block_list
+    #if send_next_msg:
 
-    if send_next_msg:
-
-        msg = block()
-        if len(block_list) > 0:
-            current_block = block_list.pop()
-        if len(block_list) == 0:
-            print("PUBLISHED ALL BLOCKS")
-            send_next_msg = False
-            return
-
+    #msg = block()
+    #q = to_quaternions(msg.roll, msg.pitch, msg.yaw)
+       # if len(block_list) > 0:
+        #    current_block = block_list.pop()
+        #if len(block_list) == 0:
+        #    print("PUBLISHED ALL BLOCKS")
+        #    send_next_msg = False
+        #    return
+    poses = []
+    labels = []
+    pose = Pose()
         # Preparing msg
-        msg.label = current_block.label
-        msg.x = round(current_block.world_coord[0, 0], 6)
-        msg.y = round(current_block.world_coord[0, 1], 6)
-        msg.z = round(current_block.world_coord[0, 2], 6)
-        msg.roll= 0.0
-        msg.pitch = 0.0
-        msg.yaw = current_block.yaw
+    for current_block in block_list:
+        q = to_quaternions(0, 0, current_block.yaw)
+        labels.append(current_block.label)
+        pose.position.x = round(current_block.world_coord[0, 0], 6)
+        pose.position.y = round(current_block.world_coord[0, 1], 6)
+        pose.position.z = round(current_block.world_coord[0, 2], 6)
+        
+        pose.orientation.x = q[0]
+        pose.orientation.y = q[1]
+        pose.orientation.z = q[2]
+        pose.orientation.w = q[3]
+        poses.append(pose)
+
+    response = GetBrickPoseResponse()
+    response.pose = poses
+    response.label = labels
+    response.numBricks = len(block_list)
+
+    
+    return response
+
+
+        # msg.label = current_block.label
+        # msg.x = round(current_block.world_coord[0, 0], 6)
+        # msg.y = round(current_block.world_coord[0, 1], 6)
+        # msg.z = round(current_block.world_coord[0, 2], 6)
+        # msg.roll= 0.0
+        # msg.pitch = 0.0
+        # msg.yaw = current_block.yaw
 
         # QUATERNION conversion
-        q = to_quaternions(msg.roll, msg.pitch, msg.yaw)
+    #q = to_quaternions(msg.roll, msg.pitch, msg.yaw)
 
         #block_info(msg)    # print msg info
+    # poses = []
+    # labels = []
+    # response = GetBrickPoseResponse()
+    # Pose().position.x = msg.x
+    # Pose().position.y = msg.y
+    # Pose().position.z = msg.z
+    # Pose().orientation.z = q[3]
+    # response.pose = Pose()
+    # response.numBricks = len(block_list)
+    # response.label = msg.label
 
-        pub.publish(msg)
-        rate.sleep()
+  
 
-        send_next_msg = False
-        print("Waiting for sending next block")
+        #pub.publish(msg)
+        #rate.sleep()
+
+        #send_next_msg = False
+        #print("Waiting for sending next block")
 
 # ----------------------------------------------- MAIN -----------------------------------------------
 
@@ -312,8 +351,12 @@ if __name__ == '__main__':
     img_sub = rospy.Subscriber("/ur5/zed_node/left_raw/image_raw_color", Image, get_img)
     point_cloud_sub = rospy.Subscriber("/ur5/zed_node/point_cloud/cloud_registered", PointCloud2, get_point_cloud, queue_size=1)   # Subscriber Point cloud
 
-    rospy.init_node('block_detector', anonymous=True)
+    #rospy.init_node('block_detector', anonymous=True)
+    rospy.init_node('GetBrickPose')
     rate = rospy.Rate(10)  # 10hz
+    #service = rospy.Service("GetBrickPose", GetBrickPose, msg_pub)
+    service = rospy.Service("GetBrickPose", GetBrickPose, msg_pub)
+
 
     try:
         rospy.spin()

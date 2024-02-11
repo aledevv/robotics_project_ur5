@@ -1,4 +1,4 @@
 ---
-geometry_msgs/Pose[] p
-int64 length
-string[] name
+geometry_msgs/Pose[] pose
+int64 numBricks
+string[] label
