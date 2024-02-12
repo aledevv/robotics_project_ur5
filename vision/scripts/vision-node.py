@@ -184,6 +184,7 @@ def find_pose(point_cloud, block):
     #   useful points:
     #   - x_min: the nearest point the camera
     #   - y_min: the rightmost point (near the arm)
+    #   - y_max: the leftmost point (furthest from the arm)
     #   these points are used to calculate yaw angle
     # @Parameters point cloud and the block
     # @Returns yaw angle (radiant)
@@ -219,12 +220,12 @@ def find_pose(point_cloud, block):
                         color_pixel(x, y, 'red')
                         min_x.set(point_world[0, 0], point_world[0, 1], point_world[0, 2], (x, y))
                         min_y.set(point_world[0, 0], point_world[0, 1], point_world[0, 2], (x, y))
-                        # max_y.set(point_world[0, 0], point_world[0, 1], point_world[0, 2], (x, y))
+                        max_y.set(point_world[0, 0], point_world[0, 1], point_world[0, 2], (x, y))
                     else:
                         color_pixel(x, y, 'red')
                         min_x.is_min_x(current_coords, (x, y))
                         min_y.is_min_y(current_coords, (x, y))
-                        # max_y.is_max_y(current_coords, (x, y))
+                        max_y.is_max_y(current_coords, (x, y))
 
     # Print 3 vertices info
     #min_x.info()
@@ -234,12 +235,23 @@ def find_pose(point_cloud, block):
     # Show in yellow points of interest
     color_pixel(min_x.px[0], min_x.px[1], 'yellow')
     color_pixel(min_y.px[0], min_y.px[1], 'yellow')
-    # color_pixel(max_y.px[0], max_y.px[1], 'yellow')
+    color_pixel(max_y.px[0], max_y.px[1], 'yellow')
 
+    x,y = choose_side(x_min, y_min, y_max)
+    
     # Finding yaw angle
-    yaw = math.atan2(min_y.x - min_x.x, min_x.y - min_y.y)
+    yaw = math.atan2(x - min_x.x, y - min_y.y)
 
     return yaw
+
+
+def choose_side(x_min, y_min, y_max):
+    # @Description function calculate longest side of the block in order to compute the angle along it
+    # @Parameters the three points of interest of the block
+
+    if ((x_min.x - y_min.x)**2 + (x_min.y - y_min.y)**2) > ((x_min.x - y_max.x)**2 + (x_min.y - y_max.y)**2):
+        return y_min.x, y_min.y
+    return y_max.x, y_max.y
 
 
 def color_pixel(x, y, color):
