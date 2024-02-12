@@ -21,7 +21,7 @@ typedef Matrix<double, 6, 6> Jacobian;
 
 
 typedef Quaterniond Qd;
-using Path = std::vector<std::pair<V6d, V2d>>;
+typedef Matrix<double, Dynamic, 8> Path;
 
 const double d_path = 10.0;
 
@@ -115,6 +115,7 @@ Qd slerp(double t, const Qd& q1, const Qd& q2) {
 
 
 // Function to perform path differential inverse kinematics with quaternions
+/*
 Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q) {
     V2d gs {mr(6), mr(7)};
     V6d js_k, js_dot_k, fv;
@@ -165,4 +166,4 @@ Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q)
     }
 
     return path;
-}
+}*/
