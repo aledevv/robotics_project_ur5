@@ -199,7 +199,7 @@ def find_pose(point_cloud, block):
 
     min_x = Point()
     min_y = Point()
-    # max_y = Point()
+    max_y = Point()
 
     # scan point cloud of the bounding box
     for x in range(int(block.x1), int(block.x2)):
@@ -237,7 +237,7 @@ def find_pose(point_cloud, block):
     color_pixel(min_y.px[0], min_y.px[1], 'yellow')
     color_pixel(max_y.px[0], max_y.px[1], 'yellow')
 
-    x,y = choose_side(x_min, y_min, y_max)
+    x,y = choose_side(min_x, min_y, max_y)
     
     # Finding yaw angle
     yaw = math.atan2(x - min_x.x, y - min_y.y)
