@@ -166,3 +166,70 @@ Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q)
 
     return path;
 }
+
+
+// Assuming Jac is a function pointer or std::function with the following signature:
+// Eigen::MatrixXd Jac(const Eigen::VectorXd& q, double scaleFactor);
+
+Eigen::VectorXd invDiffKinematiControlCompleteQuaternion(
+    std::function<Eigen::MatrixXd(const Eigen::VectorXd&, double)> Jac,
+    const Eigen::VectorXd& q, const Eigen::Vector3d& xe, const Eigen::Vector3d& xd,
+    const Eigen::Vector3d& vd, const Eigen::Vector3d& omegad, const Eigen::Quaterniond& qe,
+    const Eigen::Quaterniond& qd, const Eigen::Matrix3d& Kp, const Eigen::Matrix3d& Kq,
+    double scaleFactor)
+{
+    Eigen::MatrixXd J = Jac(q, scaleFactor);
+    if (std::abs(J.determinant()) < 1e-3)
+    {
+        std::cerr << "Near singular configuration" << std::endl;
+    }
+    Eigen::Quaterniond qp = qd * qe.conjugate();
+    Eigen::Vector3d eo = qp.vec();
+    std::cout << eo.norm() << std::endl;
+    Eigen::VectorXd dotQ = J.inverse() * (Eigen::VectorXd(6) << vd + Kp * (xd - xe), omegad + Kq * eo).finished();
+    return dotQ;
+}
+
+
+// Assuming direct is a function that takes qk and scaleFactor and returns xe and Re
+// Assuming invDiffKinematiControlCompleteQuaternion is a function that computes control
+
+std::vector<Eigen::VectorXd> invDiffKinematicControlSimCompleteQuaternion(
+    std::function<void(const Eigen::VectorXd&, double, Eigen::VectorXd&, Eigen::Matrix3d&)> direct,
+    std::function<Eigen::VectorXd(const Eigen::MatrixXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::Quaterniond&, const Eigen::Quaterniond&, double, double, double)> invDiffKinematiControlCompleteQuaternion,
+    const std::function<Eigen::VectorXd(double)>& xd,
+    const std::function<Eigen::Quaterniond(double)>& qd,
+    const Eigen::VectorXd& TH0,
+    double Kp,
+    double Kphi,
+    double minT,
+    double maxT,
+    double Dt,
+    double scaleFactor)
+{
+    std::vector<double> T;
+    for (double t = minT; t <= maxT; t += Dt) {
+        T.push_back(t);
+    }
+    size_t L = T.size();
+    std::vector<Eigen::VectorXd> q;
+    Eigen::VectorXd qk = TH0;
+    q.push_back(qk);
+
+    for (size_t i = 1; i < L - 1; ++i) {
+        double t = T[i];
+        Eigen::VectorXd xe;
+        Eigen::Matrix3d Re;
+        direct(qk, scaleFactor, xe, Re);
+        Eigen::Quaterniond qe(Re);
+        Eigen::VectorXd vd = (xd(t) - xd(t - Dt)) / Dt;
+        Eigen::Quaterniond work = (Eigen::Quaterniond(1, 0, 0, 0).slerp(2.0 / Dt, qd(t + Dt) * qd(t).conjugate()));
+        Eigen::Vector3d omegad(work.x(), work.y(), work.z());
+        Eigen::VectorXd dotqk = invDiffKinematiControlCompleteQuaternion(Jac, qk, xe, xd(t), vd, omegad, qe, qd(t), Kp, Kphi, scaleFactor);
+        Eigen::VectorXd qk1 = qk + dotqk * Dt;
+        q.push_back(qk1);
+        qk = qk1;
+    }
+
+    return q;
+}
