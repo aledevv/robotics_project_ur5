@@ -116,6 +116,7 @@ Qd slerp(double t, const Qd& q1, const Qd& q2) {
     return (n_t > 1.0) ? q2 : q1.slerp(n_t, q2);
 }
 
+/*
 // Function to perform path differential inverse kinematics with quaternions
 Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q) {
     V2d gs {mr(6), mr(7)};
@@ -127,6 +128,7 @@ Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q)
     M3d rm_k;
 
     Qd q_k, qv_k, qerr_k;
+
 
     Jacobian j_k, invj_k;
 
@@ -166,6 +168,7 @@ Path pathDifferentialInverseKinematics(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q)
 
     return path;
 }
+*/
 
 
 // Assuming Jac is a function pointer or std::function with the following signature:
@@ -212,8 +215,11 @@ std::vector<Eigen::VectorXd> invDiffKinematicControlSimCompleteQuaternion(
         T.push_back(t);
     }
     size_t L = T.size();
+
     std::vector<Eigen::VectorXd> q;
+    TH0 << -0.32, -0.78, -2.56, -1.63, -1.57, 3.49;
     Eigen::VectorXd qk = TH0;
+
     q.push_back(qk);
 
     for (size_t i = 1; i < L - 1; ++i) {
@@ -233,3 +239,5 @@ std::vector<Eigen::VectorXd> invDiffKinematicControlSimCompleteQuaternion(
 
     return q;
 }
+
+
