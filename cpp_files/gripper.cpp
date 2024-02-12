@@ -53,6 +53,7 @@ void translate_end_effector(Vector3d final_position, Matrix3d rotation, ros::Pub
     printf("BHO");
 }
 
+
 void move(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<double, Eigen::Dynamic, 3>
     VectorXd joint_state(6);
 
@@ -64,8 +65,18 @@ void move(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<do
 }
 
 
+
+/*
+VectorXd insert_new_path_instance(VectorXd p, V6d js, V2d gs)
+{
+    p.conservativeResize(p.rows() + 1, p.cols());
+    p.row(p.rows() - 1) << js(0), js(1), js(2), js(3), js(4), js(5), gs(0), gs(1);
+    return p;
+}
+*/
+
 void open_gripper(ros::Publisher p){
-    VectorXd gripper_trajectory(8);
+     VectorXd gripper_trajectory(8);
     VectorXd mr(8);
     VectorXd joints(6);
     VectorXd gripper(2);
@@ -79,24 +90,27 @@ void open_gripper(ros::Publisher p){
     const double gripper_r = gripper(0);
     const double gripper_l = gripper(1);
 
+	
+	printf("%f %f %f %f %f %f %f %f", mr(0), mr(1), mr(2), mr(3), mr(4), mr(5), mr(6), mr(7));
     // creating trajectory and moving clamps
     ros::Rate rate(120);
 
     for (int i=0; i<iterations; ++i){
-        gripper(0) = gripper_r + i*(opening_step - opening_step)/iterations;
-        gripper(1) = gripper_l + i*(opening_step - opening_step)/iterations;
+        gripper(0) = gripper_r + i*(opening_step - gripper_r)/iterations;
+        gripper(1) = gripper_l + i*(opening_step - gripper_l)/iterations;
         
-        gripper_trajectory << gripper(0), gripper(1), gripper(2), gripper(3), gripper(4), gripper(5), gripper(0), gripper(1);
+        gripper_trajectory << joints(0), joints(1), joints(2), joints(3), joints(4), joints(5), gripper(0), gripper(1);
         
         // creating msg
         std_msgs::Float64MultiArray joint_msg;
         joint_msg.data.resize(8);
-        for (int j = 0; j < 8; ++j) joint_msg.data[j]=gripper(j);
+        for (int j = 0; j < 8; ++j) joint_msg.data[j]=gripper_trajectory(j);
+        
+        printf("msg: %f %f %f %f %f %f %f %f\n", joint_msg.data[0], 			joint_msg.data[1],joint_msg.data[2],joint_msg.data[3],joint_msg.data[4],joint_msg.data[5],joint_msg.data[6],joint_msg.data[7]);
         
         p.publish(joint_msg);
         rate.sleep();
     }
-
 }
 
 void close_gripper(ros::Publisher p){
@@ -118,15 +132,16 @@ void close_gripper(ros::Publisher p){
     ros::Rate rate(120);
 
     for (int i=0; i<iterations; ++i){
-        gripper(0) = gripper_r + i*(opening_step - opening_step)/iterations;
-        gripper(1) = gripper_l + i*(opening_step - opening_step)/iterations;
+        gripper(0) = gripper_r + i*(opening_step - gripper_r)/iterations;
+        gripper(1) = gripper_l + i*(opening_step - gripper_l)/iterations;
         
-        gripper_trajectory << gripper(0), gripper(1), gripper(2), gripper(3), gripper(4), gripper(5), gripper(0), gripper(1);
+        gripper_trajectory << joints(0), joints(1), joints(2), joints(3), joints(4), joints(5), gripper(0), gripper(1);
         
         // creating msg
         std_msgs::Float64MultiArray joint_msg;
         joint_msg.data.resize(8);
-        for (int j = 0; j < 8; ++j) joint_msg.data[j]=gripper(j);
+        for (int j = 0; j < 8; ++j) joint_msg.data[j]=gripper_trajectory(j);
+        
         
         p.publish(joint_msg);
         rate.sleep();
@@ -192,6 +207,24 @@ void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d fin
 
 }
 
-int main(){
+
+
+int main(int argc, char** argv){
+
+	ros::init(argc, argv, "publisher");
+	ros::NodeHandle handler;
+	ros::Publisher pub = handler.advertise<std_msgs::Float64MultiArray>("/ur5/joint_group_pos_controller/command",1);
+	
+	
+
+	printf("Gripper: Ci sono bro!\n");
+	
+	
+	open_gripper(pub);
+	printf("verto\n");
+	close_gripper(pub);
+	printf("chiuso\n");
+	
+	
 	return 0;
 }
