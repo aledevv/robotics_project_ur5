@@ -290,14 +290,7 @@ def msg_pub(request):
     global block_list
     #if send_next_msg:
 
-    #msg = block()
-    #q = to_quaternions(msg.roll, msg.pitch, msg.yaw)
-       # if len(block_list) > 0:
-        #    current_block = block_list.pop()
-        #if len(block_list) == 0:
-        #    print("PUBLISHED ALL BLOCKS")
-        #    send_next_msg = False
-        #    return
+    
     poses = []
     labels = []
     pose = Pose()
