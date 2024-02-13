@@ -1,6 +1,6 @@
 //#include "robotics_project_ur5/kinematics.h"
-#include "Eigen/Geometry"
-#include "Eigen/Dense"	
+#include "eigen3/Eigen/Geometry"
+#include "eigen3/Eigen/Dense"	
 #include "ros/ros.h"
 #include "sensor_msgs/JointState.h"
 #include "boost/shared_ptr.hpp"
@@ -57,34 +57,93 @@ M4d direct_kin(V6d js) {
     return T10f(js(0)) * T21f(js(1)) * T32f(js(2)) * T43f(js(3)) * T54f(js(4)) * T65f(js(5));
 }
 
-Jacobian jacobian(V6d js) {
-//TODO----------------------------------------------------------------------------------------------------------------------------------------------------
+// Jacobian jacobian(V6d js) {
+// //TODO----------------------------------------------------------------------------------------------------------------------------------------------------
 
+//     Jacobian J;
+//     J.setZero();
+//     ROS_INFO("set zero ok\n");
+
+//     double c1 = cos(js(0)), s1 = sin(js(0));
+//     double c2 = cos(js(1)), s2 = sin(js(1));
+//     double c3 = cos(js(2)), s3 = sin(js(2));
+//     double c4 = cos(js(3)), s4 = sin(js(3));
+//     double c5 = cos(js(4)), s5 = sin(js(4));
+//     double c6 = cos(js(5)), s6 = sin(js(5));
+    
+//     V6d d;
+//     V6d a;
+//     d << 0.1625, 0, 0, 0.1333, 0.0997, 0.1010;
+//     a << 0, -0.425, -0.3922, 0, 0, 0;
+    
+
+//     J << d(4) * (c1 * c4 + (c1 * c2 * c3 - s1 * s3) * s4) + d(2) * c1 + d(3) * c1 - a(2) * (c2 * c3 * s1 + c1 * s2 * s3) - a(1) * (c1 * c2 * s3 + c1 * s2 * c3) - d(4) * (s1 * s2 * s3 + c1 * c3) * s4,
+//          d(4) * (c4 * s1 - (c1 * c2 * c3 + s1 * s3) * s4) + d(2) * s1 + d(3) * s1 + a(2) * (c2 * c3 * c1 - s1 * s2 * s3) + a(1) * (c1 * c3 - c2 * s1 * s3) + d(4) * (c1 * s2 * s3 - c2 * c3 * s1) * s4,
+//          0, 0, 0, 1,
+//          -c1 * (a(2) * s2 * s3 + a(1) * s2 + d(4) * (s2 * s3 * s4 - c2 * c3 * c4) - d(4) * c4 * s5 * (c2 * s3 - c3 * s2)) + s1 * (a(2) * c3 - d(4) * s3 - a(1) * c2 - d(4) * (c2 * s3 + c3 * s2)) + d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2),
+//          -s1 * (a(2) * s2 * s3 + a(1) * s2 + d(4) * (s2 * s3 * s4 - c2 * c3 * c4) - d(4) * c4 * s5 * (c2 * s3 - c3 * s2)) - c1 * (a(2) * c3 - d(4) * s3 - a(1) * c2 - d(4) * (c2 * s3 + c3 * s2)) - d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2),
+//          a(2) * c2 * c3 - (d(4) * (s2 * s3 * s4 - c2 * c3 * c4 + c4 * s2) - d(4) * c4 * c5 * (s2 * s3 * s4 - c2 * c3 * c4 + c4 * s2)) / 2 + a(1) * c2 + d(4) * (c2 * s3 + c3 * s2) + d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2) / 2 - d(4) * c4 * s5 * (c2 * c3 * c4 + s2 * s3) / 2 + d(4) * c4 * s5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * c5 * (c2 * c3 * s4 - c4 * s2) / 2 - d(4) * c4 * s5 * (c2 * c3 * s4 - c4 * s2) / 2 + d(4) * c4 * c5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * s5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * s5 * (c2 * c3 * c4 - s2 * s3) / 2 - d(4) * c4 * s5 * (c2 * c3 * c4 - s2 * s3);
+//     ROS_INFO("Computation ok\n");
+// return J;
+// }
+
+
+Jacobian jacobian(V6d js)
+{
+    V6d a(6,1);
+    a << 0.0, -0.425, -0.3922, 0.0, 0.0, 0.0;
+    V6d d(6,1);
+    d << 0.1625, 0.0, 0.0, 0.1333, 0.0997, 0.0996;
+    V6d alpha(6,1);
+    alpha << M_PI/2, 0.0, 0.0, M_PI/2, -M_PI/2, 0.0;
     Jacobian J;
     J.setZero();
-
-    double c1 = cos(js(0)), s1 = sin(js(0));
-    double c2 = cos(js(1)), s2 = sin(js(1));
-    double c3 = cos(js(2)), s3 = sin(js(2));
-    double c4 = cos(js(3)), s4 = sin(js(3));
-    double c5 = cos(js(4)), s5 = sin(js(4));
-    double c6 = cos(js(5)), s6 = sin(js(5));
-    
-    V6d d;
-    V6d a;
-    d << 0.1625, 0, 0, 0.1333, 0.0997, 0.1010;
-    a << 0, -0.425, -0.3922, 0, 0, 0;
-    
-
-    J << d(4) * (c1 * c4 + (c1 * c2 * c3 - s1 * s3) * s4) + d(2) * c1 + d(3) * c1 - a(2) * (c2 * c3 * s1 + c1 * s2 * s3) - a(1) * (c1 * c2 * s3 + c1 * s2 * c3) - d(4) * (s1 * s2 * s3 + c1 * c3) * s4,
-         d(4) * (c4 * s1 - (c1 * c2 * c3 + s1 * s3) * s4) + d(2) * s1 + d(3) * s1 + a(2) * (c2 * c3 * c1 - s1 * s2 * s3) + a(1) * (c1 * c3 - c2 * s1 * s3) + d(4) * (c1 * s2 * s3 - c2 * c3 * s1) * s4,
-         0, 0, 0, 1,
-         -c1 * (a(2) * s2 * s3 + a(1) * s2 + d(4) * (s2 * s3 * s4 - c2 * c3 * c4) - d(4) * c4 * s5 * (c2 * s3 - c3 * s2)) + s1 * (a(2) * c3 - d(4) * s3 - a(1) * c2 - d(4) * (c2 * s3 + c3 * s2)) + d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2),
-         -s1 * (a(2) * s2 * s3 + a(1) * s2 + d(4) * (s2 * s3 * s4 - c2 * c3 * c4) - d(4) * c4 * s5 * (c2 * s3 - c3 * s2)) - c1 * (a(2) * c3 - d(4) * s3 - a(1) * c2 - d(4) * (c2 * s3 + c3 * s2)) - d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2),
-         a(2) * c2 * c3 - (d(4) * (s2 * s3 * s4 - c2 * c3 * c4 + c4 * s2) - d(4) * c4 * c5 * (s2 * s3 * s4 - c2 * c3 * c4 + c4 * s2)) / 2 + a(1) * c2 + d(4) * (c2 * s3 + c3 * s2) + d(4) * c4 * c5 * (c2 * c3 * s4 + c4 * s2) / 2 - d(4) * c4 * s5 * (c2 * c3 * c4 + s2 * s3) / 2 + d(4) * c4 * s5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * c5 * (c2 * c3 * s4 - c4 * s2) / 2 - d(4) * c4 * s5 * (c2 * c3 * s4 - c4 * s2) / 2 + d(4) * c4 * c5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * s5 * (c4 * s2 - c2 * c3 * s4) / 2 + d(4) * c4 * s5 * (c2 * c3 * c4 - s2 * s3) / 2 - d(4) * c4 * s5 * (c2 * c3 * c4 - s2 * s3);
-
-return J;
+    V6d J1(6, 1);
+    J1 << d(4) * (cos(js(0)) * cos(js(4)) + cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4))) + d(2) * cos(js(0)) + d(3) * cos(js(0)) - a(2) * cos(js(1) + js(2)) * sin(js(0)) - a(1) * cos(js(1)) * sin(js(0)) - d(4) * sin(js(1) + js(2) + js(3)) * sin(js(0)),
+        d(4) * (cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4))) + d(2) * sin(js(0)) + d(3) * sin(js(0)) + a(2) * cos(js(1) + js(2)) * cos(js(0)) + a(1) * cos(js(0)) * cos(js(1)) + d(4) * sin(js(1) + js(2) + js(3)) * cos(js(0)),
+        0,
+        0,
+        0,
+        1;
+    V6d J2(6, 1);
+    J2 << -cos(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
+        -sin(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
+        a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + a(1) * cos(js(1)) + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
+        sin(js(0)),
+        -cos(js(0)),
+        0;
+    V6d J3(6, 1);
+    J3 << cos(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
+        sin(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
+            a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
+        sin(js(0)),
+        -cos(js(0)),
+        0;
+    V6d J4(6, 1);
+    J4 << d(4) * cos(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
+        d(4) * sin(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
+        d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3)) - sin(js(1) + js(2) + js(3) + js(4)) / 2),
+        sin(js(0)),
+        -cos(js(0)),
+        0;
+    V6d J5(6, 1);
+    J5 << -d(4) * sin(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(0)) * cos(js(4)),
+        d(4) * cos(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(4)) * sin(js(0)),
+        -d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3) + js(4)) / 2),
+        sin(js(1) + js(2) + js(3)) * cos(js(0)),
+        sin(js(1) + js(2) + js(3)) * sin(js(0)),
+        -cos(js(1) + js(2) + js(3));
+    V6d J6(6, 1);
+    J6 << 0,
+        0,
+        0,
+        cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4)),
+        -cos(js(0)) * cos(js(4)) - cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4)),
+        -sin(js(1) + js(2) + js(3)) * sin(js(4));
+    J << J1, J2, J3, J4, J5, J6;
+    return J;
 }
+
 
 
 /**

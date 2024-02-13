@@ -6,6 +6,7 @@
 const int X_axis = 0;
 const int Y_axis = 1;
 const int Z_axis = 2 ;
+using namespace std;
 
 double dt = 0.1;
 
@@ -25,6 +26,7 @@ Path insert_new_path_instance(Path p, V6d js, V2d gs)
 {
     p.conservativeResize(p.rows() + 1, p.cols());
     p.row(p.rows() - 1) << js(0), js(1), js(2), js(3), js(4), js(5), gs(0), gs(1);
+    ROS_INFO("insert_new_path done\n");
     return p;
 }
 
@@ -35,7 +37,7 @@ V8d get_robot_values(){        // TODO customize some names
 
     
     V8d m;
-    for (int i = 0; i < 8; ++i) m(i) = mr->position[i];
+    for (int i = 0; i < 8; i++) m(i) = mr->position[i];
     
     V8d to_return(8);
     to_return << m(4), m(3), m(0), m(5), m(6), m(7), m(1), m(2);
@@ -72,7 +74,7 @@ void move(Path mv, ros::Publisher pub)
     
     std::cout << mv;
 
-    for (int i = 0; i < mv.rows(); ++i)
+    for (int i = 0; i < mv.rows(); i++)
     {
         
         V8d joint_state;
@@ -130,8 +132,13 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
     Kq = M3d::Identity() * 1;
 
    
-    for (int i = 0; i < 6; ++i) js_k(i) = mr(i);
+    for (int i = 0; i < 6; i++) js_k(i) = mr(i);
+    js_k(5) = 3.49;
+    for(int i=0;i<6;i++){
+        std::cout << "js_k: " << js_k(i) << std::endl; 
+    }
     path = insert_new_path_instance(path, js_k, gs);
+    ROS_INFO("First path ok\n");
 
    
     for (double t = dt; t < d_path; t += dt) 
@@ -148,8 +155,11 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
 	    av_k = (qv_k.vec() * 2) / dt;
 
        printf("QUI CON NOI\n");
-       cout << js_k;  
+       for(int i=0;i<6;i++){
+        std::cout << "js_k2: " << js_k(i) << std::endl; 
+    }
         j_k = jacobian(js_k);
+        ROS_INFO("Jacobian passed\n");
         
         invj_k = (j_k.transpose() * j_k + Jacobian::Identity() * 0.0001).inverse() * j_k.transpose();
         if (abs(j_k.determinant()) < 0.00001) 
@@ -202,7 +212,7 @@ void translate_end_effector(Vector3d final_position, Matrix3d rotation, ros::Pub
 void move2(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<double, Eigen::Dynamic, 3>
     VectorXd joint_state(6);
 
-    for(int i=0; i<traj.rows(); ++i){
+    for(int i=0; i<traj.rows(); i++){
         
         joint_state = get_joint_state(get_robot_values());
         Matrix4d transf_matrix = direct_kin(joint_state);
@@ -230,7 +240,7 @@ void open_gripper(ros::Publisher p){
     // creating trajectory and moving clamps
     ros::Rate rate(120);
 
-    for (int i=0; i<iterations; ++i){
+    for (int i=0; i<iterations; i++){
         gripper(0) = gripper_r + i*(opening_step - gripper_r)/iterations;
         gripper(1) = gripper_l + i*(opening_step - gripper_l)/iterations;
         
@@ -266,7 +276,7 @@ void close_gripper(ros::Publisher p){
     // creating trajectory and moving clamps
     ros::Rate rate(120);
 
-    for (int i=0; i<iterations; ++i){
+    for (int i=0; i<iterations; i++){
         gripper(0) = gripper_r + i*(opening_step - gripper_r)/iterations;
         gripper(1) = gripper_l + i*(opening_step - gripper_l)/iterations;
         
@@ -307,7 +317,7 @@ MatrixX3d get_trajectory(Vector3d final_position){
     int starting_position = -1;
     double min_distance = -1;
     double possible_min_distance;
-    for (int i = 0; i < stationary_points_num; ++i)
+    for (int i = 0; i < stationary_points_num; i++)
     {
         possible_min_distance = abs(stationary_points(i, 0) - init_position(0));
         possible_min_distance = possible_min_distance + abs(stationary_points(i, 1) - init_position(1));
@@ -321,7 +331,7 @@ MatrixX3d get_trajectory(Vector3d final_position){
     
     int ending_position = -1;
     min_distance = -1;
-    for (int i = 0; i < stationary_points_num; ++i)
+    for (int i = 0; i < stationary_points_num; i++)
     {
         possible_min_distance = abs(stationary_points(i, 0) - final_position(0));
         possible_min_distance = possible_min_distance + abs(stationary_points(i, 1) - final_position(1));
