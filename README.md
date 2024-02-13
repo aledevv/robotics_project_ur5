@@ -83,6 +83,6 @@ rosrun motion motionPlanner
 ```BASH
 cd ~/ros_ws/src/robotics_project/vision/scripts
 python3 vision.py
-`
+```
 
 
