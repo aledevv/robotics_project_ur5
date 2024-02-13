@@ -12,6 +12,8 @@ from ultralytics import YOLO
 from ultralytics.utils.torch_utils import select_device
 import json
 
+
+
 # --------------------- DIRECTORIES and PATHS ---------------------
 ROOT = Path(__file__).resolve().parents[1]  # vision folder
 if str(ROOT) not in sys.path:
@@ -42,8 +44,14 @@ LEGO_LABELS =  ['X1-Y1-Z2',
 
 
 class LegoBlock:
-
+    
     def __init__(self, label, confidence, x1, y1, x2, y2):
+        '''
+        @ param label block class
+        @ param confidence detection confidence
+        @ param x1, y1 left top corner of bbox
+        @ param x2, y2 right bottom corner of bbox
+        '''
         self.label = label
         self.confidence = confidence
         self.x1 = x1
@@ -57,7 +65,11 @@ class LegoBlock:
         self.world_coord = ()
 
     def info(self):
-        # @Brief Function that writes some info about the block
+        '''
+        @brief Function that writes some info about the block
+        
+        '''
+        
         print("\nBlock label: " + self.label)
         print("\tconfidence: " + str(round(self.confidence, 3)))
         print("\tTop-left corner: (" + str(int(self.x1)) + ", " + str(int(self.y1)) + ")")
@@ -67,9 +79,12 @@ class LegoBlock:
 
 
 def store_blocks(data):
-    # @Brief takes blocks data from json object from YOLO detection to create a list of blocks
-    # @Parameters JSON/dictionary object
-    # @Returns a list of Blocks
+
+    ''' 
+      @brief takes blocks data from json object from YOLO detection to create a list of blocks
+      @param JSON/dictionary object
+      @retval a list of Blocks
+    '''
     blocks = []
 
     for lego in data:
@@ -82,17 +97,21 @@ def store_blocks(data):
 
 
 def print_block_info(blocks):
-    # @Brief prints list of blocks info
-    # @Parameters List of Block objects
+
+    ''' @brief prints list of blocks info
+        @param List of Block objects
+    '''
 
     for block in blocks:
         block.info()
 
 
 def detection(img_path):
-    # @Brief It crops the ZED-cam image into the Region of Interest (only the table), block detection with YOLO follows
-    # @Parameters path of the input image (from ZED camera)
-    # @Returns the list of detected Blocks
+    '''
+    @brief It crops the ZED-cam image into the Region of Interest (only the table), block detection with YOLO follows
+    @param path of the input image (from ZED camera)
+    @retval the list of detected Blocks
+    '''
 
     roi.find_roi(img_path)
 
