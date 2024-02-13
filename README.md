@@ -52,12 +52,12 @@ Go to  ``~/ros_ws/src/robotic_project``
 
 Then we copy the models inside the worlds directory :
 ```
-cd ~/ros_ws/src/robotic_project
+cd ~/ros_ws/src/robotics_project_ur5
 cp -r Models ~/ros_ws/src/locosim/ros_impedance_controller/worlds
 ```
 Now add the world.world file
 ```BASH
-cp world.world ~/ros_ws/src/locosim/ros_impedance_controller/worlds
+cp world/world.world ~/ros_ws/src/locosim/ros_impedance_controller/worlds
 ```
 Last thing is to modify the ur5_generic.py file in the locosim project adding the following line at line 71
 ```PYTHON
