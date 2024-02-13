@@ -15,7 +15,14 @@ bool is_save_position(ros::Publisher p){
     return true;
 }   // TODO FINISH
 
-
+/*
+@ brief The function performs linear interpolation between two 3D vectors given a time parameter
+@ param t The time parameter used for interpolation
+@ param x1 The starting 3D vector.
+@ param x2 The ending 3D vector.
+@ param n_t Normalized time parameter calculated as t / d_path.
+@ return The interpolated 3D vector at the specified time.
+*/ 
 V3d x(double t, V3d x1, V3d x2)
 {
     const double n_t = t / d_path;
@@ -23,6 +30,12 @@ V3d x(double t, V3d x1, V3d x2)
     else return (n_t * x2) + ((1 - n_t) * x1);
 }
 
+/*
+@ brief Inserts a new path instance into an existing path matrix
+@ param p The existing path matrix to which a new instance will be added.
+@ param js The 6D vector representing joint states.
+@ param gs The 2D vector representing goal positions.
+*/ 
 Path insert_new_path_instance(Path p, V6d js, V2d gs)
 {
     p.conservativeResize(p.rows() + 1, p.cols());
@@ -45,7 +58,11 @@ V8d get_robot_values(){        // TODO customize some names
     return to_return;
 }
 
-
+/*
+@ brief Extracts a 6D vector of joint states from an 8D vector.
+@ param mr The 8D vector containing information, where the first six elements represent joint states.
+@ return A 6D vector representing joint states extracted from the input vector.
+*/ 
 V6d get_joint_state(V8d mr){
     V6d joints(6);
     joints << mr(0), mr(1), mr(2), mr(3), mr(4), mr(5);
@@ -57,6 +74,9 @@ void error(){
     exit(1);
 }
 
+/*
+@ brief Validates a 3D position vector against specified axis limits.
+*/ 
 void validate_position(Vector3d pos){
     // check if pos is not beyond axis limits
     if (pos(X_axis) < -0.50 or pos(X_axis) > 0.5) error();
@@ -65,6 +85,11 @@ void validate_position(Vector3d pos){
     ROS_INFO("Position OK");
 }
 
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void move(Path mv, ros::Publisher pub)
 {
     
@@ -88,6 +113,11 @@ void move(Path mv, ros::Publisher pub)
     }
 }
 
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f_q)
 {
     V2d gs {mr(6), mr(7)};
@@ -165,6 +195,11 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
 }
 
 
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void translate_end_effector(Vector3d final_position, Matrix3d rotation, ros::Publisher pub){       // TODO same of move_end_effector
    
     Qd final_quaternion(rotation);
@@ -186,7 +221,11 @@ void translate_end_effector(Vector3d final_position, Matrix3d rotation, ros::Pub
     move(p, pub);
 }
 
-
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void move2(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<double, Eigen::Dynamic, 3>
     VectorXd joint_state(6);
 
@@ -199,7 +238,11 @@ void move2(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<d
     }
 }
 
-
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void open_gripper(ros::Publisher p){
     VectorXd gripper_trajectory(8);
     VectorXd mr(8);
@@ -236,6 +279,11 @@ void open_gripper(ros::Publisher p){
     }
 }
 
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void close_gripper(ros::Publisher p){
     VectorXd gripper_trajectory(8);
     VectorXd mr(8);
@@ -272,7 +320,11 @@ void close_gripper(ros::Publisher p){
 }
 
 
-
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 MatrixX3d get_trajectory(Vector3d final_position){  
   
     int stationary_points_num = 7;
@@ -342,6 +394,11 @@ MatrixX3d get_trajectory(Vector3d final_position){
 
 }
 
+/*
+@ brief e spieghi in breve
+@ param e spieghi e paraemtri se serve
+@ retval valore di ritonro
+*/ 
 void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher){
     
     // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
