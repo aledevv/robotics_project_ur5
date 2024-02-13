@@ -29,8 +29,3 @@ def find_roi(img_path):
     cv2.imwrite(OUTPUT_FILE, res)
 
 
-# --------------------- MAIN  ---------------------
-if __name__ == '__main__':
-
-    find_roi(INPUT_FILE)
-
