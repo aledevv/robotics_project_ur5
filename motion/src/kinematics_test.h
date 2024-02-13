@@ -17,6 +17,7 @@ typedef Matrix<double,6,1> V6d;
 typedef Matrix<double,8,1> V8d;
 typedef Vector3d V3d;
 typedef Vector2d V2d;
+typedef Vector4d V4d;
 typedef Matrix<double, 6, 6> Jacobian;
 
 
@@ -57,6 +58,42 @@ M4d direct_kin(V6d js) {
     return T10f(js(0)) * T21f(js(1)) * T32f(js(2)) * T43f(js(3)) * T54f(js(4)) * T65f(js(5));
 }
 
+M4d mwtb(){ //matrix_world_to_base
+    M4d T;
+    T << 1.0, 0.0, 0.0, 0.5,
+        0.0, -1.0, 0.0, 0.35,
+        0.0, 0.0, -1.0, 1.75,
+        0.0, 0.0, 0.0, 1.0;
+    return T;
+}
+
+M4d gripper_frame(){ 
+    M4d T;
+    T << 0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0;
+    return T;
+}
+
+V3d point_world_to_base(V3d worldPoint)
+{
+    M4d T;
+    V3d basePoint; 
+    V4d tempPoint;
+
+    T << 1.0, 0.0, 0.0, 0.5,
+        0.0, -1.0, 0.0, 0.35,
+        0.0, 0.0, -1.0, 1.75,
+        0.0, 0.0, 0.0, 1.0;
+
+    tempPoint = T.inverse() * V4d(worldPoint(0), worldPoint(1), worldPoint(2), 1.0);
+
+    basePoint << tempPoint(0), tempPoint(1), tempPoint(2);
+    return basePoint;
+}
+
+
 // Jacobian jacobian(V6d js) {
 // //TODO----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -88,63 +125,122 @@ M4d direct_kin(V6d js) {
 // }
 
 
-Jacobian jacobian(V6d js)
-{
-    V6d a(6,1);
-    a << 0.0, -0.425, -0.3922, 0.0, 0.0, 0.0;
-    V6d d(6,1);
-    d << 0.1625, 0.0, 0.0, 0.1333, 0.0997, 0.0996;
-    V6d alpha(6,1);
-    alpha << M_PI/2, 0.0, 0.0, M_PI/2, -M_PI/2, 0.0;
+// Jacobian jacobian(V6d js)
+// {
+//     V6d a(6,1);
+//     a << 0.0, -0.425, -0.3922, 0.0, 0.0, 0.0;
+//     V6d d(6,1);
+//     d << 0.1625, 0.0, 0.0, 0.1333, 0.0997, 0.0996;
+//     V6d alpha(6,1);
+//     alpha << M_PI/2, 0.0, 0.0, M_PI/2, -M_PI/2, 0.0;
+//     Jacobian J;
+//     J.setZero();
+//     V6d J1(6, 1);
+//     J1 << d(4) * (cos(js(0)) * cos(js(4)) + cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4))) + d(2) * cos(js(0)) + d(3) * cos(js(0)) - a(2) * cos(js(1) + js(2)) * sin(js(0)) - a(1) * cos(js(1)) * sin(js(0)) - d(4) * sin(js(1) + js(2) + js(3)) * sin(js(0)),
+//         d(4) * (cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4))) + d(2) * sin(js(0)) + d(3) * sin(js(0)) + a(2) * cos(js(1) + js(2)) * cos(js(0)) + a(1) * cos(js(0)) * cos(js(1)) + d(4) * sin(js(1) + js(2) + js(3)) * cos(js(0)),
+//         0,
+//         0,
+//         0,
+//         1;
+//     V6d J2(6, 1);
+//     J2 << -cos(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
+//         -sin(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
+//         a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + a(1) * cos(js(1)) + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
+//         sin(js(0)),
+//         -cos(js(0)),
+//         0;
+//     V6d J3(6, 1);
+//     J3 << cos(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
+//         sin(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
+//             a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
+//         sin(js(0)),
+//         -cos(js(0)),
+//         0;
+//     V6d J4(6, 1);
+//     J4 << d(4) * cos(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
+//         d(4) * sin(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
+//         d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3)) - sin(js(1) + js(2) + js(3) + js(4)) / 2),
+//         sin(js(0)),
+//         -cos(js(0)),
+//         0;
+//     V6d J5(6, 1);
+//     J5 << -d(4) * sin(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(0)) * cos(js(4)),
+//         d(4) * cos(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(4)) * sin(js(0)),
+//         -d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3) + js(4)) / 2),
+//         sin(js(1) + js(2) + js(3)) * cos(js(0)),
+//         sin(js(1) + js(2) + js(3)) * sin(js(0)),
+//         -cos(js(1) + js(2) + js(3));
+//     V6d J6(6, 1);
+//     J6 << 0,
+//         0,
+//         0,
+//         cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4)),
+//         -cos(js(0)) * cos(js(4)) - cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4)),
+//         -sin(js(1) + js(2) + js(3)) * sin(js(4));
+//     J << J1, J2, J3, J4, J5, J6;
+//     return J;
+// }
+
+Jacobian jacobian(V6d js){
     Jacobian J;
     J.setZero();
-    V6d J1(6, 1);
-    J1 << d(4) * (cos(js(0)) * cos(js(4)) + cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4))) + d(2) * cos(js(0)) + d(3) * cos(js(0)) - a(2) * cos(js(1) + js(2)) * sin(js(0)) - a(1) * cos(js(1)) * sin(js(0)) - d(4) * sin(js(1) + js(2) + js(3)) * sin(js(0)),
-        d(4) * (cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4))) + d(2) * sin(js(0)) + d(3) * sin(js(0)) + a(2) * cos(js(1) + js(2)) * cos(js(0)) + a(1) * cos(js(0)) * cos(js(1)) + d(4) * sin(js(1) + js(2) + js(3)) * cos(js(0)),
-        0,
-        0,
-        0,
-        1;
-    V6d J2(6, 1);
-    J2 << -cos(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
-        -sin(js(0)) * (a(2) * sin(js(1) + js(2)) + a(1) * sin(js(1)) + d(4) * (sin(js(1) + js(2)) * sin(js(3)) - cos(js(1) + js(2)) * cos(js(3))) - d(4) * sin(js(4)) * (cos(js(1) + js(2)) * sin(js(3)) + sin(js(1) + js(2)) * cos(js(3)))),
-        a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + a(1) * cos(js(1)) + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
-        sin(js(0)),
-        -cos(js(0)),
-        0;
-    V6d J3(6, 1);
-    J3 << cos(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
-        sin(js(0)) * (d(4) * cos(js(1) + js(2) + js(3)) - a(2) * sin(js(1) + js(2)) + d(4) * sin(js(1) + js(2) + js(3)) * sin(js(4))),
-            a(2) * cos(js(1) + js(2)) - (d(4) * sin(js(1) + js(2) + js(3) + js(4))) / 2 + (d(4) * sin(js(1) + js(2) + js(3) - js(4))) / 2 + d(4) * sin(js(1) + js(2) + js(3)),
-        sin(js(0)),
-        -cos(js(0)),
-        0;
-    V6d J4(6, 1);
-    J4 << d(4) * cos(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
-        d(4) * sin(js(0)) * (cos(js(1) + js(2) + js(3)) + sin(js(1) + js(2) + js(3)) * sin(js(4))),
-        d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3)) - sin(js(1) + js(2) + js(3) + js(4)) / 2),
-        sin(js(0)),
-        -cos(js(0)),
-        0;
-    V6d J5(6, 1);
-    J5 << -d(4) * sin(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(0)) * cos(js(4)),
-        d(4) * cos(js(0)) * sin(js(4)) - d(4) * cos(js(1) + js(2) + js(3)) * cos(js(4)) * sin(js(0)),
-        -d(4) * (sin(js(1) + js(2) + js(3) - js(4)) / 2 + sin(js(1) + js(2) + js(3) + js(4)) / 2),
-        sin(js(1) + js(2) + js(3)) * cos(js(0)),
-        sin(js(1) + js(2) + js(3)) * sin(js(0)),
-        -cos(js(1) + js(2) + js(3));
-    V6d J6(6, 1);
-    J6 << 0,
-        0,
-        0,
-        cos(js(4)) * sin(js(0)) - cos(js(1) + js(2) + js(3)) * cos(js(0)) * sin(js(4)),
-        -cos(js(0)) * cos(js(4)) - cos(js(1) + js(2) + js(3)) * sin(js(0)) * sin(js(4)),
-        -sin(js(1) + js(2) + js(3)) * sin(js(4));
-    J << J1, J2, J3, J4, J5, J6;
+
+    ROS_INFO("pre p0 x ");
+  // Matrix<double, 3, 1> p6, p5, p4, p3, p2, p1, p0;
+   V3d p6, p5, p4, p3, p2, p1, p0;
+   p0 << mwtb().block(0,3,3,1);
+   ROS_INFO("post p0 x ");
+   p1 << (mwtb()*T10f(js(0))).block(0,3,3,1);
+   ROS_INFO("post p1 x ");
+   p2 << (mwtb()*T10f(js(0))*T21f(js(1))).block(0,3,3,1);
+   p3 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))).block(0,3,3,1);
+   p4 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))*T43f(js(3))).block(0,3,3,1);
+   p5 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))*T43f(js(3))*T54f(js(4))).block(0,3,3,1);
+   ROS_INFO("pre dir x ");
+   p6 << (mwtb()*direct_kin(js)).block(0,3,3,1);
+   ROS_INFO("post dir x ");
+
+    //Matrix<double, 3, 1> z0, z1, z2, z3, z4, z5, z6;
+    V3d z0, z1, z2, z3, z4, z5, z6;
+     ROS_INFO("pre z0 x ");
+    z0 << mwtb().block(0,2,3,1);
+    z1 << (mwtb()*T10f(js(0))).block(0,2,3,1);
+     ROS_INFO("pre z2 x ");
+    z2 << (mwtb()*T10f(js(0))*T21f(js(1))).block(0,2,3,1);
+    z3 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))).block(0,2,3,1);
+     ROS_INFO("pre z4 x ");
+    z4 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))*T43f(js(3))).block(0,2,3,1);
+    z5 << (mwtb()*T10f(js(0))*T21f(js(1))*T32f(js(2))*T43f(js(3))*T54f(js(4))).block(0,2,3,1);
+    
+    ROS_INFO("pre z0 x ");
+    V6d J0(6,1);
+    J0 <<   z0.cross(p6-p0),
+            z0;
+    ROS_INFO("post z0 x ");
+    V6d J1(6,1);
+    J1 << z1.cross(p6-p1),
+          z1;
+
+    V6d J2(6,1);
+    J2 << z2.cross(p6-p2),
+          z2;
+
+    V6d J3(6,1);
+    J3 << z3.cross(p6-p3),
+          z3;
+
+    V6d J4(6,1);
+    J4 << z4.cross(p6-p4),
+          z4;
+
+    V6d J5(6,1);
+    J5 << z5.cross(p6-p5),
+          z5;
+    
+    J << J0, J1, J2, J3, J4, J5;
+
     return J;
 }
-
-
 
 /**
  * @brief Linear interpolation for vectors.

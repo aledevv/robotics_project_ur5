@@ -34,7 +34,6 @@ V8d get_robot_values(){        // TODO customize some names
     
     boost::shared_ptr<sensor_msgs::JointState const> mr;
     mr = ros::topic::waitForMessage<sensor_msgs::JointState>("/ur5/joint_states");
-
     
     V8d m;
     for (int i = 0; i < 8; i++) m(i) = mr->position[i];
@@ -44,7 +43,6 @@ V8d get_robot_values(){        // TODO customize some names
     
     return to_return;
 }
-
 
 
 V6d get_joint_state(V8d mr){
@@ -71,7 +69,6 @@ void move(Path mv, ros::Publisher pub)
     
     ros::Rate loop_rate(120);
 
-    
     std::cout << mv;
 
     for (int i = 0; i < mv.rows(); i++)
@@ -94,46 +91,26 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
 {
     V2d gs {mr(6), mr(7)};
     V6d js_k, js_dot_k; 
-
-   
     V6d fv;
-
-    
     Path path;
-
     M4d tm_k;
-
     V3d p_k;
-
-    
     M3d rm_k;
-
-    
     Qd q_k;
-
-    
     V3d av_k, pv_k;
-
-   
     Qd qv_k;
-
-   
     Qd qerr_k;
-
-    
     V3d perr_k;
-
-    
     Jacobian j_k, invj_k;
 
-    
     M3d Kp, Kq;
     Kp = M3d::Identity() * 10;
     Kq = M3d::Identity() * 1;
 
-   
-    for (int i = 0; i < 6; i++) js_k(i) = mr(i);
-    js_k(5) = 3.49;
+  
+
+    for (int i = 0; i < 6; ++i) js_k(i) = mr(i);
+    //js_k(5) = 3.49;
     for(int i=0;i<6;i++){
         std::cout << "js_k: " << js_k(i) << std::endl; 
     }
@@ -144,7 +121,7 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
     for (double t = dt; t < d_path; t += dt) 
     {
         
-        tm_k = direct_kin(js_k);
+        tm_k = mwtb() * direct_kin(js_k) * gripper_frame();
         p_k = tm_k.block(0, 3, 3, 1);
         rm_k = tm_k.block(0, 0, 3, 3);
         q_k = rm_k;
@@ -161,7 +138,7 @@ Path differential_inverse_kin_quaternions(V8d mr, V3d i_p, V3d f_p, Qd i_q, Qd f
         j_k = jacobian(js_k);
         ROS_INFO("Jacobian passed\n");
         
-        invj_k = (j_k.transpose() * j_k + Jacobian::Identity() * 0.0001).inverse() * j_k.transpose();
+        invj_k = j_k.transpose() * (j_k * j_k.transpose()  + Jacobian::Identity() * 0.0001).inverse();
         if (abs(j_k.determinant()) < 0.00001) 
         {
             ROS_WARN("Near singular configuration");
@@ -196,7 +173,7 @@ void translate_end_effector(Vector3d final_position, Matrix3d rotation, ros::Pub
     V6d joint_state = get_joint_state(robot_measures);
 
    
-    M4d transformation_matrix = direct_kin(joint_state);
+    M4d transformation_matrix = mwtb() * direct_kin(joint_state) * gripper_frame();
     M3d rotation_matrix = transformation_matrix.block(0, 0, 3, 3);
     V3d position = transformation_matrix.block(0, 3, 3, 1);
     Qd init_quaternion(rotation_matrix);
@@ -215,7 +192,7 @@ void move2(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<d
     for(int i=0; i<traj.rows(); i++){
         
         joint_state = get_joint_state(get_robot_values());
-        Matrix4d transf_matrix = direct_kin(joint_state);
+        Matrix4d transf_matrix = mwtb() * direct_kin(joint_state) * gripper_frame();
          
         translate_end_effector(traj.row(i), Matrix3d::Identity(), p);              // TODO function to send joint state new positions
     }
@@ -310,7 +287,7 @@ MatrixX3d get_trajectory(Vector3d final_position){
 
  
     V6d joint_state = get_joint_state(get_robot_values());
-    M4d transformation_matrix = direct_kin(joint_state);
+    M4d transformation_matrix = mwtb() * direct_kin(joint_state) * gripper_frame();
     V3d init_position = transformation_matrix.block(0, 3, 3, 1);
 
    
@@ -367,7 +344,7 @@ MatrixX3d get_trajectory(Vector3d final_position){
 void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher){
     
     // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
-    const double motion_height = 0.30;
+    const double motion_height = 0.50;
 
 
     // set robot arm in base config
@@ -387,18 +364,14 @@ void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d fin
 
 
     
-    
     MatrixX3d trajectory = get_trajectory(above_block_coords);       // TODO funzione per calcolare la traiettoria (restituisce matrice che ha per righe le posizioni dell'end effector)
     
-
 
     // move end effector just above the block
     move2(trajectory, publisher);
 
 
-
     open_gripper(publisher);
-
 
 
     // lower end effector
