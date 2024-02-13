@@ -57,7 +57,7 @@ class LegoBlock:
         self.world_coord = ()
 
     def info(self):
-        # @Description Function that writes some info about the block
+        # @Brief Function that writes some info about the block
         print("\nBlock label: " + self.label)
         print("\tconfidence: " + str(round(self.confidence, 3)))
         print("\tTop-left corner: (" + str(int(self.x1)) + ", " + str(int(self.y1)) + ")")
@@ -67,7 +67,7 @@ class LegoBlock:
 
 
 def store_blocks(data):
-    # @Description takes blocks data from json object from YOLO detection to create a list of blocks
+    # @Brief takes blocks data from json object from YOLO detection to create a list of blocks
     # @Parameters JSON/dictionary object
     # @Returns a list of Blocks
     blocks = []
@@ -82,7 +82,7 @@ def store_blocks(data):
 
 
 def print_block_info(blocks):
-    # @Description prints list of blocks info
+    # @Brief prints list of blocks info
     # @Parameters List of Block objects
 
     for block in blocks:
@@ -90,7 +90,7 @@ def print_block_info(blocks):
 
 
 def detection(img_path):
-    # @Description It crops the ZED-cam image into the Region of Interest (only the table), block detection with YOLO follows
+    # @Brief It crops the ZED-cam image into the Region of Interest (only the table), block detection with YOLO follows
     # @Parameters path of the input image (from ZED camera)
     # @Returns the list of detected Blocks
 
