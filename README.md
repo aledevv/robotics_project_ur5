@@ -69,7 +69,7 @@ Now we are able to run the project.
 For running the project you need to run the following commands:
 1) Run in one window the locosim simulation with the following command:
 ```BASH
-python3 ~/ros_ws/src/locosim/robot_control/lab_exercises/lab_palopoli/ur5_generic.py
+python3 ~/ros_ws/src/locosim/robot_control/base_controllers/ur5_generic.py
 ```
 2) Run in another window the task manager with the following command:
 ```BASH
