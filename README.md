@@ -81,8 +81,8 @@ rosrun motion motionPlanner
 ```
 4) Run in another window the vision node with the following command:
 ```BASH
-cd ~/ros_ws/src/robotics_project/vision/scripts
-python3 vision.py
-`
-
-
+. ~/ros_ws/devel/setup.bash
+roscd vision
+cd scripts
+python3 vision-node.py
+```
