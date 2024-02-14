@@ -46,7 +46,7 @@ void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub
 
     Path p = differential_inverse_kin_quaternions(robot_measures, position, final_position, init_quaternion, final_quaternion);
     
-    move(p, pub);
+    (p, pub);
 }
 
 
@@ -113,7 +113,7 @@ void validate_position(V3d pos){
     ROS_INFO("Position OK");
 }
 
-//takes next joint pos in path and sends them every 120 ms (?)
+//takes next joint pos in path and sends them every 120 hz
 void move(Path mv, ros::Publisher pub)
 {
     ros::Rate loop_rate(120);
