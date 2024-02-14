@@ -46,16 +46,25 @@ void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub
 
     Path p = differential_inverse_kin_quaternions(robot_measures, position, final_position, init_quaternion, final_quaternion);
     
-    (p, pub);
+    move(p, pub);
 }
 
 
-void set_start_position(ros::Publisher pub){
+V3d set_start_position(ros::Publisher pub){
     M4d transformation_matrix = mwtb() * direct_kin(start_config) * gripper_frame();
     M3d rotation_matrix = transformation_matrix.block(0, 0, 3, 3);
     V3d position = transformation_matrix.block(0, 3, 3, 1);
+    return position;
+   // translate_end_effector(position, rotation_matrix, pub);
+}   // TODO FINISH
 
-    translate_end_effector(position, rotation_matrix, pub);
+V3d set_start_quaternion(ros::Publisher pub){
+    M4d transformation_matrix = mwtb() * direct_kin(start_config) * gripper_frame();
+    M3d rotation_matrix = transformation_matrix.block(0, 0, 3, 3);
+    V3d position = transformation_matrix.block(0, 3, 3, 1);
+    Qd initQuat = rotation_matrix;
+    return initQuat;
+   // translate_end_effector(position, rotation_matrix, pub);
 }   // TODO FINISH
 
 
@@ -136,6 +145,7 @@ void move(Path mv, ros::Publisher pub)
     }
 }
 
+//from end effector position get joint states
 Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d finalPos, Qd initQuat, Qd finalQuat)
 {
     V2d gripperState {realMeasures(6), realMeasures(7)};
@@ -300,76 +310,85 @@ void close_gripper(ros::Publisher p){
 
 
 
+//from initial joint config at t0 and final at tf, get function that returns joint pos at every time in the middle 
+//  V6d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed, double middleTime){
+//     //middleTime will be dt in for
+// //     //initial speed = final speed = 0
+//     V4d a;
+//     V6d trajJoints;
+// //     a << a0, a1, a2, a3;
 
- V3d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed){
-//     //initial speed = final speed = 0
-    V3d a;
-//     a << a0, a1, a2, a3;
+// //     V8d robot_measures = get_robot_values();
+// //     V6d joint_state = get_joint_state(robot_measures);
 
-//     V8d robot_measures = get_robot_values();
-//     V6d joint_state = get_joint_state(robot_measures);
-
-//     M4d times;
-//     times << 1, t_init, pow(t_init, 2), pow(t_init, 3),
-//            1, t_final, pow(t_final, 2), pow(t_final, 3),
-//            0, 1, t_init, pow(t_init,2),
-//            0, 1, t_final, pow(t_final, 2);
+// //     M4d times;
+// //     times << 1, t_init, pow(t_init, 2), pow(t_init, 3),
+// //            1, t_final, pow(t_final, 2), pow(t_final, 3),
+// //            0, 1, t_init, pow(t_init,2),
+// //            0, 1, t_final, pow(t_final, 2);
         
-//     Matrix6d q; //to get from move pub
+// //     Matrix6d q; //to get from move pub
 
-//     for(int j=0;j<6;j++)
-//         for(int i = 0; i<6; i++)
-//             a(j,i) = times.inverse() * q(js(i));
-//     return  a; //missing to calculate polinomial trajectory with a coefficients
-return a;
+// //     for(int j=0;j<6;j++)
+// //         for(int i = 0; i<4; i++)
+// //             a(j,i) = times.inverse() * q(js(i));
+// //         for(int j=0;j<6;j++){
+// //             trajJoints(i) = a(j,0) + a(j, 1) * middleTime + a(j, 2) * pow(middleTime, 2) + a(j, 3) * pow(middleTime, 3);
+// //         }
+// // //     trajJoints()
+//     \     return  trajJoints; 
 
- }
+//  }
 
-void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher){
+void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher, Qd final_quat){
     
-    // // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
-    // const double motion_height = 0.20;
+    // // // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
+    //  const double motion_height = block_coords(2) + 0.20;
 
-    // // set robot arm in base config
-    // set_start_position(publisher);    
+    // // // set robot arm in base config
+    //  set_start_position(publisher);    
 
-    // Vector3d above_block_coords;    // position exactly above the block at motion_height
-    // above_block_coords << block_coords(X_axis), block_coords(Y_axis), motion_height;
+    //  Vector3d above_block_coords;    // position exactly above the block at motion_height
+    //  above_block_coords << block_coords(X_axis), block_coords(Y_axis), motion_height;
 
+    //  // // CHECKING positions
+    // // ROS_INFO("Validating grasping position...\n");
+    //  validate_position(above_block_coords);
+    // // ROS_INFO("Validating target position...\n");
+    //  validate_position(final_coords);
 
-    // // CHECKING positions
-    // ROS_INFO("Validating grasping position...\n");
-    // validate_position(above_block_coords);
-    // ROS_INFO("Validating target position...\n");
-    // validate_position(final_coords);
+    // Path p = differential_inverse_kin_quaternions(get_robot_values, set_start_position(publisher), above_block_coords, set_start_quaternion(publisher), final_quat);
+    // move(p,publisher);
+
+   
     
-    // //V3d trajectory = get_trajectory(above_block_coords, blo);       // TODO funzione per calcolare la traiettoria (restituisce matrice che ha per righe le posizioni dell'end effector)
+    // // //V3d trajectory = get_trajectory(above_block_coords, blo);       // TODO funzione per calcolare la traiettoria (restituisce matrice che ha per righe le posizioni dell'end effector)
     
-    // // move end effector just above the block
-    // //move2(trajectory, publisher);
+    // // // move end effector just above the block
+    // // //move2(trajectory, publisher);
 
     // open_gripper(publisher);
 
-    // // lower end effector
-    // //translate_end_effector(block_coords, block_pose, publisher);
+    // // // lower end effector
+    // // //translate_end_effector(block_coords, block_pose, publisher);
 
-    // close_gripper(publisher);
+    // // close_gripper(publisher);
 
-    // // move upwards
-    // translate_end_effector(above_block_coords, block_pose, publisher);
+    // // // move upwards
+    // // translate_end_effector(above_block_coords, block_pose, publisher);
 
-    // Vector3d above_final_coords;    // position exactly above the final position
-    // above_final_coords << final_coords(X_axis), final_coords(Y_axis), motion_height;
+    // // Vector3d above_final_coords;    // position exactly above the final position
+    // // above_final_coords << final_coords(X_axis), final_coords(Y_axis), motion_height;
 
-    // // trajectory to final position
-    // trajectory = get_trajectory(above_final_coords);
+    // // // trajectory to final position
+    // // trajectory = get_trajectory(above_final_coords);
     
-    // move2(trajectory, publisher);
+    // // move2(trajectory, publisher);
 
-    // // lower end effector
-    // translate_end_effector(final_coords, final_pose, publisher);
+    // // // lower end effector
+    // // translate_end_effector(final_coords, final_pose, publisher);
 
-    // open_gripper(publisher);
+    // // open_gripper(publisher);
 
     // // move upwards
     // translate_end_effector(above_block_coords, Matrix3d::Identity(), publisher);
