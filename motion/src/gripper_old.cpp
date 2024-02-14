@@ -13,22 +13,6 @@ double dt = 0.1;
 V6d start_config;
 start_config << -0.32, -0.78, -2.56, -1.63, -1.57, 3.49;
 
-void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub);
-void set_start_position(ros::Publisher pub);
-Path insert_new_path(Path p, V6d js, V2d gripperState);
-V8d get_robot_values();
-V6d get_joint_state(V8d realMeasures);
-void error();
-void validate_position(V3d pos);
-void move(Path mv, ros::Publisher pub);
-Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d finalPos, Qd initQuat, Qd finalQuat);
-void move2(MatrixX3d traj, ros::Publisher p);
-void open_gripper(ros::Publisher p);
-void close_gripper(ros::Publisher p);
-Matrix<double, 6, 4>  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed);
-void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher);
-
-
 //from robot joint state, finds end effector position and rotation matrix, uses them to compute
 //new path (new jointvalues), calls move that gets js and publishes them with a rate -> who uses them?
 void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub){       // TODO same of move_end_effector
@@ -221,8 +205,16 @@ Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d fin
 
 
 //move 
-void move2(MatrixX3d traj, ros::Publisher p)    { // traj could be also Matrix<double, Eigen::Dynamic, 3>
-    //move on selected point
+void move2(MatrixX3d traj, ros::Publisher p){     // traj could be also Matrix<double, Eigen::Dynamic, 3>
+    VectorXd joint_state(6);
+
+    for(int i=0; i<traj.rows(); i++){
+        
+        joint_state = get_joint_state(get_robot_values());
+        Matrix4d transf_matrix = mwtb() * direct_kin(joint_state) * gripper_frame();
+         
+        translate_end_effector(traj.row(i), Matrix3d::Identity(), p);              // TODO function to send joint state new positions
+    }
 }
 
 
@@ -299,11 +291,78 @@ void close_gripper(ros::Publisher p){
 
 
 
+MatrixX3d get_trajectory(Vector3d final_position){  
 
+    int stationary_points_num = 7;
+    Matrix<double, 7, 3> stationary_points;
+    stationary_points << 0.3, 0.1, 0.5, 
+                        0.4, 0, 0.5,
+                        0.3, -0.3, 0.5,
+                        0, -0.4, 0.5,
+                        -0.3, -0.3, 0.5, 
+                        -0.4, 0, 0.5,
+                        -0.3, 0.1, 0.5;
+        
 
- MatrixX3d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed){
+ 
+    V6d joint_state = get_joint_state(get_robot_values());
+    M4d transformation_matrix = mwtb() * direct_kin(joint_state) * gripper_frame();
+    V3d init_position = transformation_matrix.block(0, 3, 3, 1);
+
+   
+    int starting_position = -1;
+    double min_distance = -1;
+    double possible_min_distance;
+    for (int i = 0; i < stationary_points_num; i++)
+    {
+        possible_min_distance = abs(stationary_points(i, 0) - init_position(0));
+        possible_min_distance = possible_min_distance + abs(stationary_points(i, 1) - init_position(1));
+        if (min_distance == -1 || possible_min_distance < min_distance) 
+        {
+            min_distance = possible_min_distance; 
+            starting_position = i;
+        }
+    }
+
+    
+    int ending_position = -1;
+    min_distance = -1;
+    for (int i = 0; i < stationary_points_num; i++)
+    {
+        possible_min_distance = abs(stationary_points(i, 0) - final_position(0));
+        possible_min_distance = possible_min_distance + abs(stationary_points(i, 1) - final_position(1));
+        if (min_distance == -1 || possible_min_distance < min_distance)
+        {
+            min_distance = possible_min_distance; 
+            ending_position = i;
+        }
+    }
+
+   
+    bool trajectory_built = false;
+    int i = starting_position;
+
+    MatrixX3d trajectory;
+
+    do
+    {
+        trajectory.conservativeResize(trajectory.rows() + 1, trajectory.cols());
+        trajectory.row(trajectory.rows() - 1) = V3d {stationary_points(i, 0), stationary_points(i, 1), stationary_points(i, 2)};
+        if (i == ending_position) trajectory_built = true;
+        if (ending_position < starting_position) i = i - 1; else i = i + 1;
+    }
+    while (!trajectory_built);
+
+    trajectory.conservativeResize(trajectory.rows() + 1, trajectory.cols());
+    trajectory.row(trajectory.rows() - 1) = V3d {final_position(0), final_position(1), final_position(2)};
+
+    return trajectory;
+
+}
+
+// Matrix<double, 6, 4>  trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed){
 //     //initial speed = final speed = 0
-    MatrixX3d a;
+//     Matrix<double, 6, 4> a;
 //     a << a0, a1, a2, a3;
 
 //     V8d robot_measures = get_robot_values();
@@ -321,9 +380,8 @@ void close_gripper(ros::Publisher p){
 //         for(int i = 0; i<6; i++)
 //             a(j,i) = times.inverse() * q(js(i));
 //     return  a; //missing to calculate polinomial trajectory with a coefficients
-return a;
 
- }
+// }
 
 void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher){
     
