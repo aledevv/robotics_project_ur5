@@ -14,7 +14,8 @@ V6d start_config;
 //start_config << -0.32, -0.78, -2.56, -1.63, -1.57, 3.49;
 
 void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub);
-void set_start_position(ros::Publisher pub);
+V3d set_start_position(ros::Publisher pub);
+Qd set_start_quaternion(ros::Publisher pub);
 Path insert_new_path(Path p, V6d js, V2d gripperState);
 V8d get_robot_values();
 V6d get_joint_state(V8d realMeasures);
@@ -52,17 +53,15 @@ void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub
 
 V3d set_start_position(ros::Publisher pub){
     M4d transformation_matrix = mwtb() * direct_kin(start_config) * gripper_frame();
-    M3d rotation_matrix = transformation_matrix.block(0, 0, 3, 3);
     V3d position = transformation_matrix.block(0, 3, 3, 1);
     return position;
    // translate_end_effector(position, rotation_matrix, pub);
 }   // TODO FINISH
 
-V3d set_start_quaternion(ros::Publisher pub){
+Qd set_start_quaternion(ros::Publisher pub){
     M4d transformation_matrix = mwtb() * direct_kin(start_config) * gripper_frame();
     M3d rotation_matrix = transformation_matrix.block(0, 0, 3, 3);
-    V3d position = transformation_matrix.block(0, 3, 3, 1);
-    Qd initQuat = rotation_matrix;
+    Qd initQuat(rotation_matrix);
     return initQuat;
    // translate_end_effector(position, rotation_matrix, pub);
 }   // TODO FINISH
