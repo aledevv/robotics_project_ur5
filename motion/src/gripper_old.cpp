@@ -165,7 +165,7 @@ Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d fin
         quatVel_k = slerp(t + dt, initQuat, finalQuat) * slerp(t, initQuat, finalQuat).conjugate(); 
 	    angVel_k = (quatVel_k.vec() * 2) / dt;  //from relation between quaternion and angular velocity (rotation around w axe)
 
-        printf("QUI CON NOI\n");
+      
             for(int i=0;i<6;i++){
             std::cout << "jointState_k2: " << jointState_k(i) << std::endl; 
         }
@@ -465,7 +465,7 @@ int main(int argc, char** argv){
 
             printf("Inizio grasping...\n");
 	        //grasping_operation(block, pose, final_pos, final_pose, pub);
-            grasping_operation(block, pose, final_pos, final_pose, pub);
+           // grasping_operation(block, pose, final_pos, final_pose, pub);
             // ROS_INFO("pose: %ld, %ld, %ld, %ld", srv.response.pose[0].position.x, srv.response.pose[0].position.y, srv.response.pose[0].position.z, srv.response.pose[0].orientation.z);
             // ROS_INFO("length: %ld", srv.response.numBricks[0]);
             // ROS_INFO("label: %s", srv.response.label[0]);

@@ -11,7 +11,7 @@ using namespace std;
 
 double dt = 0.1;
 V6d start_config;
-start_config << -0.32, -0.78, -2.56, -1.63, -1.57, 3.49;
+//start_config << -0.32, -0.78, -2.56, -1.63, -1.57, 3.49;
 
 void translate_end_effector(V3d final_position, M3d rotation, ros::Publisher pub);
 void set_start_position(ros::Publisher pub);
@@ -25,7 +25,7 @@ Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d fin
 void move2(MatrixX3d traj, ros::Publisher p);
 void open_gripper(ros::Publisher p);
 void close_gripper(ros::Publisher p);
-Matrix<double, 6, 4>  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed);
+V3d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed);
 void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher);
 
 
@@ -181,7 +181,7 @@ Path differential_inverse_kin_quaternions(V8d realMeasures, V3d initPos, V3d fin
         quatVel_k = slerp(t + dt, initQuat, finalQuat) * slerp(t, initQuat, finalQuat).conjugate(); 
 	    angVel_k = (quatVel_k.vec() * 2) / dt;  //from relation between quaternion and angular velocity (rotation around w axe)
 
-        printf("QUI CON NOI\n");
+   
             for(int i=0;i<6;i++){
             std::cout << "jointState_k2: " << jointState_k(i) << std::endl; 
         }
@@ -301,9 +301,9 @@ void close_gripper(ros::Publisher p){
 
 
 
- MatrixX3d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed){
+ V3d  get_trajectory(double t_init, double t_final, V6d joints_init, V6d joints_final, double speed){
 //     //initial speed = final speed = 0
-    MatrixX3d a;
+    V3d a;
 //     a << a0, a1, a2, a3;
 
 //     V8d robot_measures = get_robot_values();
@@ -327,52 +327,52 @@ return a;
 
 void grasping_operation(Vector3d block_coords, Matrix3d block_pose, Vector3d final_coords, Matrix3d final_pose, ros::Publisher publisher){
     
-    // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
-    const double motion_height = 0.20;
+    // // TODO cambia nomi qui -> potrebbe servire scegliere un altezza a cui prendere e mollare il blocco se quella passata da vision non va bene
+    // const double motion_height = 0.20;
 
-    // set robot arm in base config
-    set_start_position(publisher);    
+    // // set robot arm in base config
+    // set_start_position(publisher);    
 
-    Vector3d above_block_coords;    // position exactly above the block at motion_height
-    above_block_coords << block_coords(X_axis), block_coords(Y_axis), motion_height;
+    // Vector3d above_block_coords;    // position exactly above the block at motion_height
+    // above_block_coords << block_coords(X_axis), block_coords(Y_axis), motion_height;
 
 
-    // CHECKING positions
-    ROS_INFO("Validating grasping position...\n");
-    validate_position(above_block_coords);
-    ROS_INFO("Validating target position...\n");
-    validate_position(final_coords);
+    // // CHECKING positions
+    // ROS_INFO("Validating grasping position...\n");
+    // validate_position(above_block_coords);
+    // ROS_INFO("Validating target position...\n");
+    // validate_position(final_coords);
     
-    MatrixX3d trajectory = get_trajectory(above_block_coords);       // TODO funzione per calcolare la traiettoria (restituisce matrice che ha per righe le posizioni dell'end effector)
+    // //V3d trajectory = get_trajectory(above_block_coords, blo);       // TODO funzione per calcolare la traiettoria (restituisce matrice che ha per righe le posizioni dell'end effector)
     
-    // move end effector just above the block
-    move2(trajectory, publisher);
+    // // move end effector just above the block
+    // //move2(trajectory, publisher);
 
-    open_gripper(publisher);
+    // open_gripper(publisher);
 
-    // lower end effector
-    translate_end_effector(block_coords, block_pose, publisher);
+    // // lower end effector
+    // //translate_end_effector(block_coords, block_pose, publisher);
 
-    close_gripper(publisher);
+    // close_gripper(publisher);
 
-    // move upwards
-    translate_end_effector(above_block_coords, block_pose, publisher);
+    // // move upwards
+    // translate_end_effector(above_block_coords, block_pose, publisher);
 
-    Vector3d above_final_coords;    // position exactly above the final position
-    above_final_coords << final_coords(X_axis), final_coords(Y_axis), motion_height;
+    // Vector3d above_final_coords;    // position exactly above the final position
+    // above_final_coords << final_coords(X_axis), final_coords(Y_axis), motion_height;
 
-    // trajectory to final position
-    trajectory = get_trajectory(above_final_coords);
+    // // trajectory to final position
+    // trajectory = get_trajectory(above_final_coords);
     
-    move2(trajectory, publisher);
+    // move2(trajectory, publisher);
 
-    // lower end effector
-    translate_end_effector(final_coords, final_pose, publisher);
+    // // lower end effector
+    // translate_end_effector(final_coords, final_pose, publisher);
 
-    open_gripper(publisher);
+    // open_gripper(publisher);
 
-    // move upwards
-    translate_end_effector(above_block_coords, Matrix3d::Identity(), publisher);
+    // // move upwards
+    // translate_end_effector(above_block_coords, Matrix3d::Identity(), publisher);
 
 }
 
@@ -391,7 +391,7 @@ int main(int argc, char** argv){
      {  
          for (int i = 0; i < srv.response.numBricks; ++i)
         { 
-            printf("Gripper: Ci sono bro!\n");
+            printf("Gripper: Ci sono\n");
 	
             Vector3d block;
             //block << 0.3151, 0.5602, 0.8699;
@@ -407,7 +407,7 @@ int main(int argc, char** argv){
 
             printf("Inizio grasping...\n");
 	        //grasping_operation(block, pose, final_pos, final_pose, pub);
-            grasping_operation(block, pose, final_pos, final_pose, pub);
+            //grasping_operation(block, pose, final_pos, final_pose, pub);
             // ROS_INFO("pose: %ld, %ld, %ld, %ld", srv.response.pose[0].position.x, srv.response.pose[0].position.y, srv.response.pose[0].position.z, srv.response.pose[0].orientation.z);
             // ROS_INFO("length: %ld", srv.response.numBricks[0]);
             // ROS_INFO("label: %s", srv.response.label[0]);

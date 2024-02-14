@@ -5,7 +5,7 @@
     </p>
     <p align='center'>
     Developed by:<br>
-    DAlessandro De Vidi <br>
+    Alessandro De Vidi <br>
     Daniele Marisa <br>
     Giulia Modenese <br>
     Sofia Zandonà
