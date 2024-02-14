@@ -250,7 +250,7 @@ Jacobian jacobian(V6d js){
  * @param x2 Final vector.
  * @return Interpolated vector.
  */
-V3d linearInterpolation(double t, const V3d& x1, const V3d& x2) {
+V3d linearInterpolation(double t, V3d x1, V3d x2) {
     const double n_t = t / d_path;
     return (n_t > 1.0) ? x2 : (n_t * x2 + (1.0 - n_t) * x1);
 }
